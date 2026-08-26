@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}FarmProfit | Farming Profitability Platform{% endblock %}
+{% block public_content %}
+<div class="landing">
+  <header class="landing-nav">
+    <a class="brand dark" href="{{ url_for('index') }}"><span class="brand-mark">🌾</span><span>FarmProfit</span></a>
+    <div class="nav-actions"><a href="{{ url_for('login') }}" data-i18n="Log in">Log in</a><a class="btn btn-primary" href="{{ url_for('register') }}" data-i18n="Create account">Create account</a></div>
+  </header>
+  <section class="hero-grid">
+    <div class="hero-copy">
+      <div class="eyebrow" data-i18n="FARM INTELLIGENCE PLATFORM">FARM INTELLIGENCE PLATFORM</div>
+      <h1><span data-i18n="Know your farm's profit">Know your farm's profit</span> <span data-i18n="before you invest.">before you invest.</span></h1>
+      <p>Model land, yield, market price and production costs in seconds. Compare crops, stress-test assumptions and save your farming strategies.</p>
+      <div class="hero-actions"><a class="btn btn-primary btn-large" href="{{ url_for('register') }}" data-i18n="Start free analysis →">Start free analysis →</a><a class="btn btn-light btn-large" href="{{ url_for('login') }}" data-i18n="Use demo account">Use demo account</a></div>
+      <div class="trust-row"><span>✓ Profit & loss</span><span>✓ ROI & risk</span><span>✓ What-if analysis</span><span>✓ Saved history</span></div>
+    </div>
+    <div class="hero-visual">
+      <div class="glow"></div>
+      <div class="mock-dashboard">
+        <div class="mock-top"><span>FarmProfit</span><span class="live-pill">● LIVE MODEL</span></div>
+        <div class="mock-metrics"><div><small>Revenue</small><b>₹2.64L</b></div><div><small>Total Cost</small><b>₹61.5K</b></div><div><small>Profit</small><b class="positive">₹2.03L</b></div></div>
+        <div class="mock-chart"><div class="chart-title">Profit outlook</div><div class="bars"><i style="height:35%"></i><i style="height:49%"></i><i style="height:62%"></i><i style="height:76%"></i><i style="height:90%"></i></div></div>
+        <div class="mock-row"><span>Rice · 5 acres</span><strong>ROI 330.1%</strong></div>
+      </div>
+    </div>
+  </section>
+  <section class="feature-grid">
+    <article><div class="feature-icon">📈</div><h3>Profit prediction</h3><p>Calculate revenue, total cost, net profit, margin and ROI from your own assumptions.</p></article>
+    <article><div class="feature-icon">🎚️</div><h3>What-if simulator</h3><p>Stress-test market price, yield and costs and instantly see the financial impact.</p></article>
+    <article><div class="feature-icon">⚖️</div><h3>Crop comparison</h3><p>Rank built-in crop strategies by projected profit and risk using consistent assumptions.</p></article>
+  </section>
+  <footer class="landing-footer">FarmProfit · Farming decisions backed by numbers</footer>
+</div>
+{% endblock %}

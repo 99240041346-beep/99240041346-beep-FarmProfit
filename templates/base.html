@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d2617">
+  <title>{% block title %}FarmProfit{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<div class="language-switcher" aria-label="Language selector">
+  <span>🌐</span>
+  <select id="languageSelect" aria-label="Language">
+    <option value="en">English</option>
+    <option value="te">తెలుగు</option>
+    <option value="hi">हिन्दी</option>
+    <option value="ta">தமிழ்</option>
+    <option value="kn">ಕನ್ನಡ</option>
+  </select>
+</div>
+{% if current_user.is_authenticated %}
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">🌾</span><span>FarmProfit</span></a>
+    <div class="farmer-card">
+      <div class="avatar">{{ current_user.name[:1]|upper }}</div>
+      <div><strong>{{ current_user.name }}</strong><small>{{ current_user.email }}</small></div>
+    </div>
+    <nav class="side-nav">
+      <a class="{% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">▦ <span data-i18n="Dashboard">Dashboard</span></a>
+      <a class="{% if request.endpoint == 'simulator' %}active{% endif %}" href="{{ url_for('simulator') }}">↗ <span data-i18n="Profit Predictor">Profit Predictor</span></a>
+      <a href="{{ url_for('simulator') }}#what-if">◒ <span data-i18n="What-if Simulator">What-if Simulator</span></a>
+      <a class="{% if request.endpoint == 'compare' %}active{% endif %}" href="{{ url_for('compare') }}">⚖ <span data-i18n="Compare Crops">Compare Crops</span></a>
+      <a class="{% if request.endpoint == 'history' %}active{% endif %}" href="{{ url_for('history') }}">◷ <span data-i18n="History">History</span></a>
+      <a class="{% if request.endpoint == 'report' %}active{% endif %}" href="{{ url_for('report') }}">▤ <span data-i18n="Reports">Reports</span></a>
+    </nav>
+    <div class="side-bottom"><a href="{{ url_for('logout') }}">↪ <span data-i18n="Logout">Logout</span></a></div>
+  </aside>
+
+  <main class="main">
+    <div class="mobile-top">
+      <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">🌾</span><span>FarmProfit</span></a>
+      <a href="{{ url_for('logout') }}"><span data-i18n="Logout">Logout</span></a>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}<div class="flash-stack">{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% else %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<div class="public-flashes">{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
+  {% endwith %}
+  {% block public_content %}{% endblock %}
+{% endif %}
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

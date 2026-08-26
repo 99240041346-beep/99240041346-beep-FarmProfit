@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Login — FarmProfit{% endblock %}
+{% block public_content %}
+<div class="auth-page auth-login-page">
+  <div class="auth-decor auth-decor-one">🌱</div>
+  <div class="auth-decor auth-decor-two">📊</div>
+  <div class="auth-decor auth-decor-three">🌾</div>
+  <div class="auth-brand"><a class="brand dark" href="{{ url_for('index') }}"><span class="brand-mark">🌾</span><span>FarmProfit</span></a></div>
+  <div class="farm-horizon"><div class="sun"></div><div class="hill hill-a"></div><div class="hill hill-b"></div><div class="field-lines"></div><div class="farm-barn">🏡</div><div class="farm-tractor">🚜</div></div>
+  <div class="auth-card auth-card-modern">
+    <div class="auth-icon">🌱</div>
+    <h1 data-i18n="Welcome back">Welcome back</h1>
+    <p data-i18n="Log in to continue your farm profitability analysis.">Log in to continue your farm profitability analysis.</p>
+    <form method="post" class="auth-form">
+      <label><span data-i18n="Email">Email</span><input type="email" name="email" autocomplete="email" placeholder="you@example.com" required></label>
+      <label><span data-i18n="Password">Password</span><div class="password-wrap"><input id="loginPassword" type="password" name="password" autocomplete="current-password" placeholder="••••••••" required><button type="button" class="password-toggle" data-target="loginPassword" aria-label="Show password">👁</button></div></label>
+      <div class="auth-options"><label class="check-label"><input type="checkbox"> <span data-i18n="Remember me">Remember me</span></label><a href="#" onclick="return false;" data-i18n="Forgot password?">Forgot password?</a></div>
+      <button class="btn btn-primary full btn-large auth-submit" type="submit"><span>↪</span> <span data-i18n="Log in">Log in</span></button>
+    </form>
+    <div class="auth-divider"><span data-i18n="or">or</span></div>
+    <button class="google-btn" type="button" onclick="alert('Google sign-in can be connected with OAuth later.')"><span class="google-g">G</span><span data-i18n="Continue with Google">Continue with Google</span></button>
+    <div class="demo-box"><strong data-i18n="Demo Account">Demo Account</strong><span>Email: demo@farmprofit.app</span><span>Password: Demo@12345</span></div>
+    <p class="auth-switch"><span data-i18n="New to FarmProfit?">New to FarmProfit?</span> <a href="{{ url_for('register') }}" data-i18n="Create an account">Create an account</a></p>
+  </div>
+</div>
+{% endblock %}

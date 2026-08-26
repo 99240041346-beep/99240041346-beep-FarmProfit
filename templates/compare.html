@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Compare Crops — FarmProfit{% endblock %}
+{% block content %}
+<header class="page-head compact"><div><div class="eyebrow" data-i18n="STRATEGY LAB / CROP COMPARISON">STRATEGY LAB / CROP COMPARISON</div><h1 data-i18n="Which crop earns more?">Which crop earns more?</h1><p data-i18n="Illustrative 5-acre comparison using the built-in demo assumptions.">Illustrative 5-acre comparison using the built-in demo assumptions.</p></div><a class="btn btn-light" href="{{ url_for('dashboard') }}">← Dashboard</a></header>
+{% if results %}<div class="winner"><div><span data-i18n="🏆 RECOMMENDED STRATEGY">🏆 RECOMMENDED STRATEGY</span><h2>{{ results[0].crop }}</h2><p data-i18n="Highest predicted profit under the current demo assumptions.">Highest predicted profit under the current demo assumptions.</p></div><strong>₹{{ "{:,.0f}".format(results[0].profit) }}</strong></div>{% endif %}
+<section class="panel"><div class="table-wrap"><table><thead><tr><th>Rank</th><th>Crop</th><th>Revenue</th><th>Cost</th><th>Profit</th><th>ROI</th><th>Risk</th></tr></thead><tbody>{% for r in results %}<tr><td>#{{ loop.index }}</td><td><b>{{ r.crop }}</b></td><td>₹{{ "{:,.0f}".format(r.revenue) }}</td><td>₹{{ "{:,.0f}".format(r.total_cost) }}</td><td class="{% if r.profit < 0 %}negative{% else %}positive{% endif %}">₹{{ "{:,.0f}".format(r.profit) }}</td><td>{{ "{:.1f}".format(r.roi) }}%</td><td><span class="risk {{ r.risk|lower }}">{{ r.risk }}</span></td></tr>{% endfor %}</tbody></table></div><div class="chart-wrap"><canvas id="compareChart" height="130"></canvas></div></section>
+{% endblock %}
+{% block scripts %}<script>window.compareData={{ results|tojson }};</script>{% endblock %}

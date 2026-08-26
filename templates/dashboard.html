@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — FarmProfit{% endblock %}
+{% block content %}
+<header class="page-head"><div><div class="eyebrow" data-i18n="FARM INTELLIGENCE / DASHBOARD">FARM INTELLIGENCE / DASHBOARD</div><h1><span data-i18n="Good to see you,">Good to see you,</span> {{ current_user.name.split()[0] }}.</h1><p data-i18n="Make your next farming decision with numbers, not guesses.">Make your next farming decision with numbers, not guesses.</p></div><a class="btn btn-primary" href="{{ url_for('simulator') }}">+ New Analysis</a></header>
+<section class="metric-grid">
+  <div class="metric"><small data-i18n="Total Revenue">Total Revenue</small><strong>₹{{ "{:,.0f}".format(total_revenue) }}</strong><span data-i18n="Across saved plans">Across saved plans</span></div>
+  <div class="metric"><small data-i18n="Total Cost">Total Cost</small><strong>₹{{ "{:,.0f}".format(total_cost) }}</strong><span data-i18n="Investment tracked">Investment tracked</span></div>
+  <div class="metric"><small data-i18n="Total Profit">Total Profit</small><strong class="{% if total_profit < 0 %}negative{% else %}positive{% endif %}">₹{{ "{:,.0f}".format(total_profit) }}</strong><span data-i18n="Net outcome">Net outcome</span></div>
+  <div class="metric"><small data-i18n="Average ROI">Average ROI</small><strong>{{ "{:.1f}".format(avg_roi) }}%</strong><span data-i18n="Portfolio average">Portfolio average</span></div>
+</section>
+<section class="panel predictor-card">
+  <div class="panel-head"><div><div class="eyebrow" data-i18n="PROFIT PREDICTOR">PROFIT PREDICTOR</div><h2 data-i18n="Build a farm plan">Build a farm plan</h2><p data-i18n="Enter your assumptions. Results are calculated instantly.">Enter your assumptions. Results are calculated instantly.</p></div><a href="{{ url_for('simulator') }}">↗ Full simulator</a></div>
+  <form class="predict-form" action="{{ url_for('simulator') }}" method="post">
+    <input type="hidden" name="save_plan" value="0">
+    <div class="field-row four">
+      <label><span data-i18n="Crop">Crop</span><select name="crop" data-crop-select>{% for crop, info in crops.items() %}<option value="{{ crop }}" data-yield="{{ info.yield }}" data-price="{{ info.price }}">{{ crop }}</option>{% endfor %}</select></label>
+      <label><span data-i18n="Land area (acres)">Land area (acres)</span><input type="number" name="area" value="5" min="0.1" step="0.1" required></label>
+      <label><span data-i18n="Expected yield / acre">Expected yield / acre</span><input type="number" name="yield_per_acre" value="22" min="0" step="0.1" required data-yield-input></label>
+      <label><span data-i18n="Market price / unit">Market price / unit</span><input type="number" name="price" value="2400" min="0" step="1" required data-price-input></label>
+    </div>
+    <div class="cost-heading" data-i18n="PRODUCTION COSTS">PRODUCTION COSTS</div>
+    <div class="field-row four">{% for key, label, default in cost_fields %}<label>{{ label }} (₹)<input type="number" name="{{ key }}" value="{{ default }}" min="0" step="100"></label>{% endfor %}</div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">+ Predict Profit</button><a class="btn btn-light" href="{{ url_for('simulator') }}">Open simulator</a></div>
+  </form>
+</section>
+<section class="panel simulator-teaser"><div class="panel-head"><div><div class="eyebrow" data-i18n="WHAT-IF SIMULATOR">WHAT-IF SIMULATOR</div><h2 data-i18n="Stress-test your plan">Stress-test your plan</h2><p data-i18n="Change price, yield and costs and see how profit changes.">Change price, yield and costs and see how profit changes.</p></div><a href="{{ url_for('simulator') }}#what-if">Open →</a></div><div class="slider-preview"><div><span>Market price change</span><b>±30%</b></div><div class="track"><i style="width:65%"></i></div><div><span>Yield change</span><b>±30%</b></div><div class="track"><i style="width:52%"></i></div><div><span>Cost change</span><b>±30%</b></div><div class="track"><i style="width:74%"></i></div></div></section>
+<section class="panel"><div class="panel-head"><div><div class="eyebrow" data-i18n="SAVED PLANS">SAVED PLANS</div><h2 data-i18n="Recent analyses">Recent analyses</h2></div><a href="{{ url_for('history') }}">View all →</a></div>{% if plans %}<div class="table-wrap"><table><thead><tr><th>Crop</th><th>Revenue</th><th>Cost</th><th>Profit</th><th>ROI</th><th>Risk</th></tr></thead><tbody>{% for p in plans %}<tr><td><b>{{ p.crop }}</b><small>{{ "{:g}".format(p.area) }} acres</small></td><td>₹{{ "{:,.0f}".format(p.revenue) }}</td><td>₹{{ "{:,.0f}".format(p.total_cost) }}</td><td class="{% if p.profit < 0 %}negative{% else %}positive{% endif %}">₹{{ "{:,.0f}".format(p.profit) }}</td><td>{{ "{:.1f}".format(p.roi) }}%</td><td><span class="risk {{ p.risk|lower }}">{{ p.risk }}</span></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty"><h3>No saved plans yet</h3><p>Run a prediction and save it to start building your farm history.</p><a class="btn btn-primary" href="{{ url_for('simulator') }}">Create first plan</a></div>{% endif %}</section>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Profit Predictor — FarmProfit{% endblock %}
+{% block content %}
+<header class="page-head compact"><div><div class="eyebrow" data-i18n="FARM INTELLIGENCE / PROFIT PREDICTOR">FARM INTELLIGENCE / PROFIT PREDICTOR</div><h1 data-i18n="Profitability simulator">Profitability simulator</h1><p data-i18n="Change your farm assumptions and understand your expected profit.">Change your farm assumptions and understand your expected profit.</p></div><a class="btn btn-light" href="{{ url_for('history') }}">View history</a></header>
+<div class="sim-layout">
+<section class="panel"><div class="panel-head"><div><h2>Farm assumptions</h2><p>Enter your expected farm values.</p></div></div>
+<form id="sim-form" method="post" action="{{ url_for('simulator') }}">
+<input type="hidden" name="save_plan" id="save_plan" value="0">
+<div class="field-row two">
+<label><span data-i18n="Crop">Crop</span><select name="crop" id="crop">{% for crop, info in crops.items() %}<option value="{{ crop }}" data-yield="{{ info.yield }}" data-price="{{ info.price }}" {% if form.get('crop','Rice') == crop %}selected{% endif %}>{{ crop }}</option>{% endfor %}</select></label>
+<label><span data-i18n="Land area (acres)">Land area (acres)</span><input id="area" name="area" type="number" min="0.1" step="0.1" value="{{ form.get('area','5') }}" required></label>
+</div>
+<div class="field-row two"><label><span data-i18n="Expected yield / acre">Expected yield / acre</span><input id="yield_per_acre" name="yield_per_acre" type="number" min="0" step="0.1" value="{{ form.get('yield_per_acre','22') }}" required></label><label><span data-i18n="Market price / unit">Market price / unit</span><input id="price" name="price" type="number" min="0" step="1" value="{{ form.get('price','2400') }}" required></label></div>
+<div class="cost-heading" data-i18n="PRODUCTION COSTS">PRODUCTION COSTS</div>
+<div class="field-row two costs">{% for key, label, default in cost_fields %}<label>{{ label }} (₹)<input name="{{ key }}" type="number" min="0" step="100" value="{{ form.get(key, default) }}"></label>{% endfor %}</div>
+<div class="form-actions"><button class="btn btn-primary" type="submit">Calculate Profit</button><button class="btn btn-light" type="button" id="saveBtn">Calculate & Save Plan</button></div>
+
+<div class="soil-recommendation" id="soil-recommendation">
+  <div class="soil-head">
+    <div>
+      <div class="eyebrow" data-i18n="SOIL & CROP FIT">SOIL & CROP FIT</div>
+      <h3 data-i18n="Recommended soil for your crop">Recommended soil for your crop</h3>
+      <p data-i18n="Select a crop to see the best soil, pH, drainage, water needs and practical growing advice.">Select a crop to see the best soil, pH, drainage, water needs and practical growing advice.</p>
+    </div>
+    <div class="soil-score" id="soilScore">—</div>
+  </div>
+  <div class="soil-main-grid">
+    <div class="soil-primary">
+      <div class="soil-icon" id="soilIcon">🌱</div>
+      <div><span class="soil-label" data-i18n="Best soil">Best soil</span><strong id="bestSoil">—</strong></div>
+    </div>
+    <label class="soil-select-wrap">
+      <span data-i18n="Your soil type (optional)">Your soil type (optional)</span>
+      <select id="yourSoil">
+        <option value="" data-i18n="Choose your soil">Choose your soil</option>
+        <option value="Black Soil" data-i18n="Black Soil">Black Soil</option>
+        <option value="Red Soil" data-i18n="Red Soil">Red Soil</option>
+        <option value="Alluvial Soil" data-i18n="Alluvial Soil">Alluvial Soil</option>
+        <option value="Sandy Soil" data-i18n="Sandy Soil">Sandy Soil</option>
+        <option value="Clay Soil" data-i18n="Clay Soil">Clay Soil</option>
+        <option value="Loamy Soil" data-i18n="Loamy Soil">Loamy Soil</option>
+      </select>
+    </label>
+  </div>
+  <div class="soil-detail-grid">
+    <div><span data-i18n="Ideal pH">Ideal pH</span><b id="soilPh">—</b></div>
+    <div><span data-i18n="Drainage">Drainage</span><b id="soilDrainage">—</b></div>
+    <div><span data-i18n="Water need">Water need</span><b id="soilWater">—</b></div>
+    <div><span data-i18n="Texture">Texture</span><b id="soilTexture">—</b></div>
+  </div>
+  <div class="soil-advice-grid">
+    <div class="soil-advice"><span data-i18n="Why this soil works">Why this soil works</span><p id="soilWhy">—</p></div>
+    <div class="soil-advice"><span data-i18n="Farmer tip">Farmer tip</span><p id="soilTip">—</p></div>
+  </div>
+  <div class="soil-match" id="soilMatch"><span class="match-dot">●</span> <strong data-i18n="Soil suitability">Soil suitability</strong>: <b id="soilMatchText">Select your soil to check</b></div>
+</div>
+</form></section>
+<section class="results-column">
+<div class="result-hero {% if result and result.profit < 0 %}loss{% endif %}"><small data-i18n="ESTIMATED NET PROFIT">ESTIMATED NET PROFIT</small><div id="profit-display">₹{{ "{:,.0f}".format(result.profit) if result else "0" }}</div><p id="profit-message">{% if result %}{% if result.profit < 0 %}This plan is currently loss-making.{% else %}This plan is profitable under your assumptions.{% endif %}{% else %}Change the values to calculate your profit.{% endif %}</p></div>
+<div class="metric-grid mini"><div class="metric"><small>Revenue</small><strong id="revenue-display">₹{{ "{:,.0f}".format(result.revenue) if result else "0" }}</strong></div><div class="metric"><small>Total Cost</small><strong id="cost-display">₹{{ "{:,.0f}".format(result.total_cost) if result else "0" }}</strong></div><div class="metric"><small>ROI</small><strong id="roi-display">{{ "{:.1f}".format(result.roi) if result else "0.0" }}%</strong></div><div class="metric"><small>Risk</small><strong id="risk-display">{{ result.risk if result else "—" }}</strong></div></div>
+<div class="panel insight-panel"><div class="panel-head"><div><div class="eyebrow" data-i18n="DECISION METRICS">DECISION METRICS</div><h2 data-i18n="Break-even & production">Break-even & production</h2></div></div><div class="break-grid"><div><span>Break-even price</span><b id="be-price">₹{{ "{:,.0f}".format(result.break_even_price) if result else "0" }}</b></div><div><span>Break-even yield</span><b id="be-yield">{{ "{:.2f}".format(result.break_even_yield) if result else "0.00" }}</b></div><div><span>Production</span><b id="production">{{ "{:,.1f}".format(result.production) if result else "0" }}</b></div><div><span>Margin</span><b id="margin">{{ "{:.1f}".format(result.margin) if result else "0.0" }}%</b></div></div></div>
+</section></div>
+<section class="panel whatif" id="what-if"><div class="panel-head"><div><div class="eyebrow" data-i18n="WHAT-IF SIMULATOR">WHAT-IF SIMULATOR</div><h2 data-i18n="Stress-test your assumptions">Stress-test your assumptions</h2><p data-i18n="Move the sliders to simulate market and production changes.">Move the sliders to simulate market and production changes.</p></div><span class="live-dot">● LIVE</span></div><div class="slider-grid"><label>Market price <output id="priceOut">0%</output><input id="priceSlider" type="range" min="-30" max="30" value="0"></label><label>Yield <output id="yieldOut">0%</output><input id="yieldSlider" type="range" min="-30" max="30" value="0"></label><label>Total costs <output id="costOut">0%</output><input id="costSlider" type="range" min="-30" max="30" value="0"></label></div><div class="whatif-result"><div><small>Scenario profit</small><strong id="scenarioProfit">₹0</strong></div><div><small>Change vs baseline</small><strong id="scenarioChange">0%</strong></div><div><small>Scenario risk</small><strong id="scenarioRisk">—</strong></div></div></section>
+{% endblock %}
+{% block scripts %}<script>window.FARMPROFIT={apiUrl:"{{ url_for('api_calculate') }}"};</script>{% endblock %}

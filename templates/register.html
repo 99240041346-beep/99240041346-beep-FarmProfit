@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Create Account — FarmProfit{% endblock %}
+{% block public_content %}
+<div class="auth-page auth-register-page">
+  <div class="auth-decor auth-decor-one">🌱</div>
+  <div class="auth-decor auth-decor-two">📈</div>
+  <div class="auth-decor auth-decor-three">🌾</div>
+  <div class="auth-brand"><a class="brand dark" href="{{ url_for('index') }}"><span class="brand-mark">🌾</span><span>FarmProfit</span></a></div>
+  <div class="farm-horizon"><div class="sun"></div><div class="hill hill-a"></div><div class="hill hill-b"></div><div class="field-lines"></div><div class="farm-barn">🏡</div><div class="farm-tractor">🚜</div></div>
+  <div class="auth-card auth-card-modern register-card">
+    <div class="auth-icon">👨‍🌾</div>
+    <h1 data-i18n="Create your farmer account">Create your farmer account</h1>
+    <p data-i18n="Save farm plans and compare profitability over time.">Save farm plans and compare profitability over time.</p>
+    <form method="post" class="auth-form">
+      <label><span data-i18n="Full name">Full name</span><input type="text" name="name" autocomplete="name" placeholder="Your name" required></label>
+      <label><span data-i18n="Email">Email</span><input type="email" name="email" autocomplete="email" placeholder="you@example.com" required></label>
+      <label><span data-i18n="Password">Password</span><div class="password-wrap"><input id="registerPassword" type="password" name="password" autocomplete="new-password" placeholder="Minimum 6 characters" minlength="6" required><button type="button" class="password-toggle" data-target="registerPassword">👁</button></div></label>
+      <label><span data-i18n="Confirm password">Confirm password</span><div class="password-wrap"><input id="confirmPassword" type="password" name="confirm_password" autocomplete="new-password" placeholder="Repeat password" minlength="6" required><button type="button" class="password-toggle" data-target="confirmPassword">👁</button></div></label>
+      <button class="btn btn-primary full btn-large auth-submit" type="submit"><span>🌱</span> <span data-i18n="Create account">Create account</span></button>
+    </form>
+    <p class="auth-switch"><span data-i18n="Already have an account?">Already have an account?</span> <a href="{{ url_for('login') }}" data-i18n="Log in">Log in</a></p>
+  </div>
+</div>
+{% endblock %}
