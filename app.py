@@ -528,6 +528,16 @@ def api_weather():
 
 
 
+def calculate_irrigation_profit_impact(irrigation, area, irrigation_cost_per_1000_litres=25.0):
+    litres = float(irrigation.get("estimated_total_litres", 0) or 0)
+    cost = (litres / 1000.0) * max(float(irrigation_cost_per_1000_litres or 0), 0)
+    return {
+        "estimated_water_litres": int(round(litres)),
+        "irrigation_cost": round(cost, 2),
+        "cost_per_1000_litres": round(float(irrigation_cost_per_1000_litres), 2),
+    }
+
+
 @app.get("/api/irrigation")
 def api_irrigation():
     latitude = request.args.get("lat")
@@ -539,7 +549,11 @@ def api_irrigation():
         if crop not in IRRIGATION_PROFILES:
             crop = "Rice"
         weather = fetch_weather(latitude, longitude)
-        return jsonify(build_irrigation_advice(weather, crop, area, lang))
+        advice = build_irrigation_advice(weather, crop, area, lang)
+        advice["profit_impact"] = calculate_irrigation_profit_impact(
+            advice, area, request.args.get("water_cost_per_1000_litres", 25)
+        )
+        return jsonify(advice)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
