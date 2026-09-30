@@ -276,27 +276,60 @@
 (function initFarmWeather(){
   const root=document.querySelector('[data-weather]'); if(!root) return;
   const loading=document.getElementById('weatherLoading'), content=document.getElementById('weatherContent'), error=document.getElementById('weatherError');
+  const input=document.getElementById('farmLocationInput'), searchBtn=document.getElementById('farmLocationSearch'), gpsBtn=document.getElementById('farmUseGps'), status=document.getElementById('weatherLocationStatus');
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const icon=code=>{code=Number(code);if(code===0)return'☀️';if(code<=3)return'🌤️';if(code<=48)return'🌫️';if(code<=67)return'🌧️';if(code<=77)return'🌨️';if(code<=82)return'🌦️';return'⛈️'};
   const condition=code=>{code=Number(code);if(code===0)return'Clear';if(code<=3)return'Partly cloudy';if(code<=48)return'Foggy';if(code<=55)return'Drizzle';if(code<=67)return'Rain';if(code<=77)return'Snow';if(code<=82)return'Rain showers';return'Thunderstorm'};
   const dayName=(date,i)=>i===0?'Today':new Date(date+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'});
+  const setStatus=m=>{if(status)status.textContent=m||''};
   function render(d){
-    const cur=d.current||{}, daily=d.daily||{}; document.getElementById('weatherTemp').textContent=Math.round(cur.temperature_2m||0)+'°C';
-    document.getElementById('weatherFeels').textContent=Math.round(cur.apparent_temperature||0)+'°C'; document.getElementById('weatherHumidity').textContent=Math.round(cur.relative_humidity_2m||0)+'%';
+    const cur=d.current||{}, daily=d.daily||{}, place=d.location||{};
+    document.getElementById('weatherTemp').textContent=Math.round(cur.temperature_2m||0)+'°C';
+    document.getElementById('weatherFeels').textContent=Math.round(cur.apparent_temperature||0)+'°C';
+    document.getElementById('weatherHumidity').textContent=Math.round(cur.relative_humidity_2m||0)+'%';
     document.getElementById('weatherWind').textContent=Math.round(cur.wind_speed_10m||0)+' km/h';
     document.getElementById('weatherRain').textContent=Math.max(...((d.hourly&&d.hourly.precipitation_probability)||[]).slice(0,6),0)+'%';
-    document.getElementById('weatherIcon').textContent=icon(cur.weather_code); document.getElementById('weatherCondition').textContent=condition(cur.weather_code);
-    document.getElementById('weatherLocation').textContent='Farm location · '+(d.location.timezone||'local time'); document.getElementById('weatherUpdated').textContent='Updated '+(cur.time||d.updated_at||'now');
+    document.getElementById('weatherIcon').textContent=icon(cur.weather_code);
+    document.getElementById('weatherCondition').textContent=condition(cur.weather_code);
+    document.getElementById('weatherLocation').textContent=(place.name?place.name+(place.admin1?', '+place.admin1:'')+' · ':'Farm location · ')+(place.timezone||'local time');
+    document.getElementById('weatherUpdated').textContent='Updated '+(cur.time||d.updated_at||'now');
     document.getElementById('weatherAlerts').innerHTML=(d.alerts||[]).map(a=>'<div class="farm-alert '+esc(a.level)+'"><span class="alert-icon">'+esc(a.icon)+'</span><div><strong>'+esc(a.title)+'</strong><p>'+esc(a.message)+'</p></div></div>').join('');
     document.getElementById('weatherDays').innerHTML=(daily.time||[]).map((date,i)=>'<div class="weather-day"><small>'+dayName(date,i)+'</small><span>'+icon(daily.weather_code[i])+'</span><b>'+Math.round(daily.temperature_2m_max[i])+'° / '+Math.round(daily.temperature_2m_min[i])+'°</b><em>'+Math.round(daily.precipitation_probability_max[i]||0)+'% rain</em></div>').join('');
-    loading.hidden=true; error.hidden=true; content.hidden=false;
+    loading.hidden=true; error.hidden=true; content.hidden=false; setStatus('Live weather connected.');
+  }
+  async function fetchWeather(lat,lon){
+    const res=await fetch('/api/weather?lat='+encodeURIComponent(lat)+'&lon='+encodeURIComponent(lon),{cache:'no-store'});
+    const data=await res.json(); if(!res.ok)throw new Error(data.detail||data.error||'Weather request failed'); render(data);
+  }
+  async function searchLocation(){
+    const q=(input?.value||'').trim(); if(q.length<2){setStatus('Enter a village, town, district or city.');return;}
+    setStatus('Finding '+q+'…'); loading.hidden=false; error.hidden=true; content.hidden=true;
+    try{
+      const res=await fetch('/api/geocode?q='+encodeURIComponent(q),{cache:'no-store'}), place=await res.json();
+      if(!res.ok)throw new Error(place.error||'Location not found');
+      await fetchWeather(place.latitude,place.longitude);
+      document.getElementById('weatherLocation').textContent=place.name+(place.admin1?', '+place.admin1:'')+(place.country?' · '+place.country:'');
+      localStorage.setItem('farmprofit-location',JSON.stringify(place)); setStatus('Using selected farm location.');
+    }catch(e){loading.hidden=true;error.hidden=false;error.textContent=e.message||'Could not load weather for this location.';setStatus('');}
+  }
+  function useGps(){
+    setStatus('Requesting GPS location…'); loading.hidden=false; error.hidden=true; content.hidden=true;
+    if(!navigator.geolocation){error.hidden=false;error.textContent='GPS is unavailable. Search for your farm location instead.';loading.hidden=true;return;}
+    navigator.geolocation.getCurrentPosition(async p=>{
+      try{await fetchWeather(p.coords.latitude,p.coords.longitude);setStatus('Using GPS farm location.')}
+      catch(e){loading.hidden=true;error.hidden=false;error.textContent='Weather service could not be reached. Search for your farm location instead.'}
+    },()=>{loading.hidden=true;error.hidden=false;error.textContent='GPS permission was blocked. Enter your farm location below.';setStatus('GPS unavailable — location search is ready.')},{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
   }
   async function load(){
-    loading.hidden=false; error.hidden=true; content.hidden=true; loading.textContent='Detecting your farm location and loading live weather…';
-    if(!navigator.geolocation){error.hidden=false;error.textContent='Location is not available in this browser. Open FarmProfit with a browser that supports location access.';loading.hidden=true;return;}
-    navigator.geolocation.getCurrentPosition(async pos=>{try{const res=await fetch('/api/weather?lat='+encodeURIComponent(pos.coords.latitude)+'&lon='+encodeURIComponent(pos.coords.longitude),{cache:'no-store'});const data=await res.json();if(!res.ok)throw new Error(data.error||'Weather request failed');render(data)}catch(e){loading.hidden=true;error.hidden=false;error.textContent='Live weather could not be loaded right now. Please refresh and try again.'}},()=>{loading.hidden=true;error.hidden=false;error.textContent='Location permission is required for live farm weather. Allow location access and refresh.'},{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
+    const saved=JSON.parse(localStorage.getItem('farmprofit-location')||'null');
+    if(saved?.latitude&&saved?.longitude){try{await fetchWeather(saved.latitude,saved.longitude);setStatus('Using your saved farm location.');return}catch(e){}}
+    useGps();
   }
-  const btn=document.getElementById('weatherRefresh'); if(btn)btn.addEventListener('click',load); load();
+  if(searchBtn)searchBtn.addEventListener('click',searchLocation);
+  if(input)input.addEventListener('keydown',e=>{if(e.key==='Enter')searchLocation()});
+  if(gpsBtn)gpsBtn.addEventListener('click',useGps);
+  const btn=document.getElementById('weatherRefresh'); if(btn)btn.addEventListener('click',load);
+  load();
 })();
 
 
