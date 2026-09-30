@@ -36,3 +36,5 @@
 .irrigation-stats b{font-size:17px}
 .irrigation-note{display:block;margin-top:14px;color:#68756c;line-height:1.5}
 @media(max-width:760px){.irrigation-controls{grid-template-columns:1fr}.irrigation-stats{grid-template-columns:1fr 1fr}}
+
+.irrigation-impact{margin-top:14px;padding:12px 14px;border-radius:12px;background:#edf7ee;color:#315f38;font-weight:700}
