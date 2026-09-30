@@ -8,6 +8,17 @@
   <div class="metric"><small data-i18n="Total Profit">Total Profit</small><strong class="{% if total_profit < 0 %}negative{% else %}positive{% endif %}">₹{{ "{:,.0f}".format(total_profit) }}</strong><span data-i18n="Net outcome">Net outcome</span></div>
   <div class="metric"><small data-i18n="Average ROI">Average ROI</small><strong>{{ "{:.1f}".format(avg_roi) }}%</strong><span data-i18n="Portfolio average">Portfolio average</span></div>
 </section>
+<section class="panel weather-panel" id="weatherPanel" data-weather>
+  <div class="panel-head"><div><div class="eyebrow">LIVE FARM WEATHER</div><h2>Weather & farm alerts</h2><p id="weatherLocation">Allow location access to load live conditions for your farm.</p></div><span class="weather-live-pill"><i></i> LIVE</span></div>
+  <div class="weather-loading" id="weatherLoading">Detecting your farm location and loading live weather…</div>
+  <div class="weather-content" id="weatherContent" hidden>
+    <div class="weather-current"><div class="weather-temp"><span id="weatherIcon">🌤️</span><strong id="weatherTemp">--°</strong><small id="weatherCondition">Loading…</small></div><div class="weather-stats"><div><span>Feels like</span><b id="weatherFeels">--°</b></div><div><span>Humidity</span><b id="weatherHumidity">--%</b></div><div><span>Wind</span><b id="weatherWind">-- km/h</b></div><div><span>Rain chance</span><b id="weatherRain">--%</b></div></div></div>
+    <div class="weather-alerts" id="weatherAlerts"></div>
+    <div class="weather-days" id="weatherDays"></div>
+    <div class="weather-footer"><span id="weatherUpdated">Updated --</span><button class="btn btn-light weather-refresh" type="button" id="weatherRefresh">↻ Refresh</button></div>
+  </div>
+  <div class="weather-error" id="weatherError" hidden></div>
+</section>
 <section class="panel predictor-card">
   <div class="panel-head"><div><div class="eyebrow" data-i18n="PROFIT PREDICTOR">PROFIT PREDICTOR</div><h2 data-i18n="Build a farm plan">Build a farm plan</h2><p data-i18n="Enter your assumptions. Results are calculated instantly.">Enter your assumptions. Results are calculated instantly.</p></div><a href="{{ url_for('simulator') }}">↗ Full simulator</a></div>
   <form class="predict-form" action="{{ url_for('simulator') }}" method="post">
