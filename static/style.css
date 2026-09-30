@@ -44,3 +44,5 @@
 .weather-profit-risk{display:inline-block;padding:7px 10px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.04em}
 .weather-profit-risk.low{background:#edf7ee;color:#2d6a38}.weather-profit-risk.medium{background:#fff5dc;color:#80621a}.weather-profit-risk.high{background:#fdecea;color:#9b3a31}
 .weather-profit-factors{margin-top:10px;display:grid;gap:5px;color:#59665d;font-size:13px;line-height:1.45}
+
+.weather-location-tools{display:flex;gap:8px;align-items:center;margin:12px 0 4px}.weather-location-tools input{flex:1;min-width:0;border:1px solid #dce7df;border-radius:12px;padding:11px 13px;font:inherit;background:#fff}.weather-location-status{min-height:18px;font-size:12px;color:#66746b;margin-bottom:8px}.weather-location-tools .btn{white-space:nowrap}@media(max-width:700px){.weather-location-tools{flex-wrap:wrap}.weather-location-tools input{flex-basis:100%}.weather-location-tools .btn{flex:1}}
