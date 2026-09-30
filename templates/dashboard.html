@@ -19,6 +19,30 @@
   </div>
   <div class="weather-error" id="weatherError" hidden></div>
 </section>
+<section class="panel irrigation-panel" id="irrigationAdvisor">
+  <div class="panel-head">
+    <div><div class="eyebrow" data-i18n="SMART IRRIGATION ADVISOR">SMART IRRIGATION ADVISOR</div><h2 data-i18n="Water only when the crop needs it">Water only when the crop needs it</h2><p data-i18n="Combines crop, rainfall, temperature and humidity to recommend your next irrigation action.">Combines crop, rainfall, temperature and humidity to recommend your next irrigation action.</p></div>
+    <span class="irrigation-badge">💧 <span data-i18n="CROP-AWARE">CROP-AWARE</span></span>
+  </div>
+  <div class="irrigation-controls">
+    <label><span data-i18n="Crop">Crop</span><select id="irrigationCrop">{% for crop, info in crops.items() %}<option value="{{ crop }}" data-i18n-option="{{ crop }}">{{ crop }}</option>{% endfor %}</select></label>
+    <label><span data-i18n="Farm area (acres)">Farm area (acres)</span><input id="irrigationArea" type="number" min="0.1" step="0.1" value="5"></label>
+    <button class="btn btn-primary" id="irrigationCheck" type="button" data-i18n="Check irrigation">Check irrigation</button>
+  </div>
+  <div class="irrigation-loading" id="irrigationLoading" hidden data-i18n="Analyzing weather and crop water demand…">Analyzing weather and crop water demand…</div>
+  <div class="irrigation-result" id="irrigationResult" hidden>
+    <div class="irrigation-action" id="irrigationAction"></div>
+    <p id="irrigationMessage"></p>
+    <div class="irrigation-stats">
+      <div><span data-i18n="Estimated water / acre">Estimated water / acre</span><b id="irrigationPerAcre">-- L</b></div>
+      <div><span data-i18n="Estimated total water">Estimated total water</span><b id="irrigationTotal">-- L</b></div>
+      <div><span data-i18n="Rain in next 24h">Rain in next 24h</span><b id="irrigationRain">-- mm</b></div>
+      <div><span data-i18n="Rain probability">Rain probability</span><b id="irrigationProbability">--%</b></div>
+    </div>
+    <small class="irrigation-note" id="irrigationNote"></small>
+  </div>
+  <div class="weather-error" id="irrigationError" hidden></div>
+</section>
 <section class="panel predictor-card">
   <div class="panel-head"><div><div class="eyebrow" data-i18n="PROFIT PREDICTOR">PROFIT PREDICTOR</div><h2 data-i18n="Build a farm plan">Build a farm plan</h2><p data-i18n="Enter your assumptions. Results are calculated instantly.">Enter your assumptions. Results are calculated instantly.</p></div><a href="{{ url_for('simulator') }}">↗ Full simulator</a></div>
   <form class="predict-form" action="{{ url_for('simulator') }}" method="post">
