@@ -538,6 +538,28 @@ def calculate_irrigation_profit_impact(irrigation, area, irrigation_cost_per_100
     }
 
 
+def build_weather_profit_impact(weather, irrigation, crop):
+    current = weather.get("current", {}) or {}
+    daily = weather.get("daily", {}) or {}
+    alerts = weather.get("alerts", []) or []
+    temp = float(current.get("temperature_2m", 0) or 0)
+    rain = float((daily.get("precipitation_sum", []) or [0])[0] or 0)
+    risk = 0
+    factors = []
+    if temp >= 38:
+        risk += 3; factors.append("Heat may increase water demand and crop stress.")
+    if rain >= 20:
+        risk += 2; factors.append("Heavy rain may delay field operations.")
+    if any(str(a.get("severity","")).lower() == "high" for a in alerts):
+        risk += 2; factors.append("A high-severity weather alert is active.")
+    if float(irrigation.get("irrigation_cost", 0) or 0) > 0:
+        factors.append("Irrigation expense is included in the operating-cost estimate.")
+    level = "high" if risk >= 5 else "medium" if risk >= 3 else "low"
+    return {"crop": crop, "risk_level": level, "risk_points": risk, "factors": factors or ["Current forecast has no major automatic profit-risk factor."],
+            "irrigation_cost": irrigation.get("irrigation_cost", 0), "rain_24h_mm": rain,
+            "summary": "Weather conditions may affect operating costs and field timing. Use the estimate as a planning signal, not a guaranteed profit forecast."}
+
+
 @app.get("/api/irrigation")
 def api_irrigation():
     latitude = request.args.get("lat")
@@ -553,6 +575,7 @@ def api_irrigation():
         advice["profit_impact"] = calculate_irrigation_profit_impact(
             advice, area, request.args.get("water_cost_per_1000_litres", 25)
         )
+        advice["weather_profit_impact"] = build_weather_profit_impact(weather, advice["profit_impact"], crop)
         return jsonify(advice)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
