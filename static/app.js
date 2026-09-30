@@ -390,6 +390,11 @@
       document.getElementById('irrigationCost').textContent='₹'+Number((data.profit_impact||{}).irrigation_cost||0).toLocaleString();
       const impact=document.getElementById('irrigationImpact');
       impact.textContent=(data.action==='skip'?'💰 Irrigation cost avoided based on forecast.':'💧 Estimated irrigation expense for this recommendation: ₹'+Number((data.profit_impact||{}).irrigation_cost||0).toLocaleString());
+      const wp=data.weather_profit_impact||{};
+      const risk=document.getElementById('weatherProfitRisk');
+      risk.textContent=(wp.risk_level||'low').toUpperCase()+' WEATHER RISK';
+      risk.className='weather-profit-risk '+(wp.risk_level||'low');
+      document.getElementById('weatherProfitFactors').innerHTML=(wp.factors||[]).map(x=>'<div>• '+esc(x)+'</div>').join('');
       document.getElementById('irrigationRain').textContent=data.rain_24h_mm+' mm';
       document.getElementById('irrigationProbability').textContent=data.rain_probability_24h+'%';
       document.getElementById('irrigationNote').textContent=data.method;
