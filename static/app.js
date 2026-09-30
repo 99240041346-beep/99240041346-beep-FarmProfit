@@ -270,3 +270,141 @@
   if(languageSelectorForSoil) languageSelectorForSoil.addEventListener("change", function(){ setTimeout(updateSoilRecommendation,30); });
   updateSoilRecommendation();
 })();
+
+
+/* FarmProfit live weather + agricultural alerts */
+(function initFarmWeather(){
+  const root=document.querySelector('[data-weather]'); if(!root) return;
+  const loading=document.getElementById('weatherLoading'), content=document.getElementById('weatherContent'), error=document.getElementById('weatherError');
+  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const icon=code=>{code=Number(code);if(code===0)return'☀️';if(code<=3)return'🌤️';if(code<=48)return'🌫️';if(code<=67)return'🌧️';if(code<=77)return'🌨️';if(code<=82)return'🌦️';return'⛈️'};
+  const condition=code=>{code=Number(code);if(code===0)return'Clear';if(code<=3)return'Partly cloudy';if(code<=48)return'Foggy';if(code<=55)return'Drizzle';if(code<=67)return'Rain';if(code<=77)return'Snow';if(code<=82)return'Rain showers';return'Thunderstorm'};
+  const dayName=(date,i)=>i===0?'Today':new Date(date+'T12:00:00').toLocaleDateString(undefined,{weekday:'short'});
+  function render(d){
+    const cur=d.current||{}, daily=d.daily||{}; document.getElementById('weatherTemp').textContent=Math.round(cur.temperature_2m||0)+'°C';
+    document.getElementById('weatherFeels').textContent=Math.round(cur.apparent_temperature||0)+'°C'; document.getElementById('weatherHumidity').textContent=Math.round(cur.relative_humidity_2m||0)+'%';
+    document.getElementById('weatherWind').textContent=Math.round(cur.wind_speed_10m||0)+' km/h';
+    document.getElementById('weatherRain').textContent=Math.max(...((d.hourly&&d.hourly.precipitation_probability)||[]).slice(0,6),0)+'%';
+    document.getElementById('weatherIcon').textContent=icon(cur.weather_code); document.getElementById('weatherCondition').textContent=condition(cur.weather_code);
+    document.getElementById('weatherLocation').textContent='Farm location · '+(d.location.timezone||'local time'); document.getElementById('weatherUpdated').textContent='Updated '+(cur.time||d.updated_at||'now');
+    document.getElementById('weatherAlerts').innerHTML=(d.alerts||[]).map(a=>'<div class="farm-alert '+esc(a.level)+'"><span class="alert-icon">'+esc(a.icon)+'</span><div><strong>'+esc(a.title)+'</strong><p>'+esc(a.message)+'</p></div></div>').join('');
+    document.getElementById('weatherDays').innerHTML=(daily.time||[]).map((date,i)=>'<div class="weather-day"><small>'+dayName(date,i)+'</small><span>'+icon(daily.weather_code[i])+'</span><b>'+Math.round(daily.temperature_2m_max[i])+'° / '+Math.round(daily.temperature_2m_min[i])+'°</b><em>'+Math.round(daily.precipitation_probability_max[i]||0)+'% rain</em></div>').join('');
+    loading.hidden=true; error.hidden=true; content.hidden=false;
+  }
+  async function load(){
+    loading.hidden=false; error.hidden=true; content.hidden=true; loading.textContent='Detecting your farm location and loading live weather…';
+    if(!navigator.geolocation){error.hidden=false;error.textContent='Location is not available in this browser. Open FarmProfit with a browser that supports location access.';loading.hidden=true;return;}
+    navigator.geolocation.getCurrentPosition(async pos=>{try{const res=await fetch('/api/weather?lat='+encodeURIComponent(pos.coords.latitude)+'&lon='+encodeURIComponent(pos.coords.longitude),{cache:'no-store'});const data=await res.json();if(!res.ok)throw new Error(data.error||'Weather request failed');render(data)}catch(e){loading.hidden=true;error.hidden=false;error.textContent='Live weather could not be loaded right now. Please refresh and try again.'}},()=>{loading.hidden=true;error.hidden=false;error.textContent='Location permission is required for live farm weather. Allow location access and refresh.'},{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
+  }
+  const btn=document.getElementById('weatherRefresh'); if(btn)btn.addEventListener('click',load); load();
+})();
+
+
+/* FarmProfit crop-aware irrigation + localized weather alerts */
+(function initSmartIrrigation(){
+  const panel=document.getElementById('irrigationAdvisor');
+  if(!panel) return;
+  const translations={
+    en:{
+      "Thunderstorm alert":"Thunderstorm alert","Avoid spraying, irrigation work and exposed field activity during thunderstorms.":"Avoid spraying, irrigation work and exposed field activity during thunderstorms.",
+      "Rain alert":"Rain alert","Rain is possible soon. Consider delaying pesticide or fertilizer spraying and review irrigation needs.":"Rain is possible soon. Consider delaying pesticide or fertilizer spraying and review irrigation needs.",
+      "Strong wind alert":"Strong wind alert","Secure young plants and equipment. Avoid spraying in strong winds.":"Secure young plants and equipment. Avoid spraying in strong winds.",
+      "Heat stress alert":"Heat stress alert","Increase crop monitoring and plan irrigation during cooler hours.":"Increase crop monitoring and plan irrigation during cooler hours.",
+      "High humidity alert":"High humidity alert","High humidity can increase fungal disease pressure. Inspect crops and avoid unnecessary leaf wetness.":"High humidity can increase fungal disease pressure. Inspect crops and avoid unnecessary leaf wetness.",
+      "High UV alert":"High UV alert","Schedule intensive field work outside peak UV hours where practical.":"Schedule intensive field work outside peak UV hours where practical.",
+      "Favorable conditions":"Favorable conditions","No major automatic weather risk detected right now. Continue routine crop monitoring.":"No major automatic weather risk detected right now. Continue routine crop monitoring."
+    },
+    te:{
+      "Thunderstorm alert":"పిడుగులతో కూడిన వర్షం హెచ్చరిక","Avoid spraying, irrigation work and exposed field activity during thunderstorms.":"పిడుగులతో కూడిన వర్షం సమయంలో మందులు పిచికారీ చేయడం, నీటిపారుదల పనులు మరియు బహిరంగ పొల పనులను నివారించండి.",
+      "Rain alert":"వర్షం హెచ్చరిక","Rain is possible soon. Consider delaying pesticide or fertilizer spraying and review irrigation needs.":"త్వరలో వర్షం వచ్చే అవకాశం ఉంది. పురుగుమందులు లేదా ఎరువులు పిచికారీ చేయడం ఆలస్యం చేసి, నీటిపారుదల అవసరాన్ని పరిశీలించండి.",
+      "Strong wind alert":"బలమైన గాలి హెచ్చరిక","Secure young plants and equipment. Avoid spraying in strong winds.":"చిన్న మొక్కలు మరియు పరికరాలను రక్షించండి. బలమైన గాలిలో పిచికారీ చేయవద్దు.",
+      "Heat stress alert":"వేడి ఒత్తిడి హెచ్చరిక","Increase crop monitoring and plan irrigation during cooler hours.":"పంటను ఎక్కువగా పరిశీలించి, చల్లని సమయాల్లో నీటిపారుదల ప్రణాళిక చేయండి.",
+      "High humidity alert":"అధిక తేమ హెచ్చరిక","High humidity can increase fungal disease pressure. Inspect crops and avoid unnecessary leaf wetness.":"అధిక తేమ వల్ల శిలీంద్ర వ్యాధుల ప్రమాదం పెరగవచ్చు. పంటను పరిశీలించి, అవసరం లేని ఆకుల తడిని నివారించండి.",
+      "High UV alert":"అధిక UV హెచ్చరిక","Schedule intensive field work outside peak UV hours where practical.":"సాధ్యమైనప్పుడు అధిక UV సమయాలను తప్పించి ముఖ్యమైన పొల పనులను చేయండి.",
+      "Favorable conditions":"అనుకూల పరిస్థితులు","No major automatic weather risk detected right now. Continue routine crop monitoring.":"ప్రస్తుతం పెద్ద వాతావరణ ప్రమాదం గుర్తించబడలేదు. సాధారణ పంట పర్యవేక్షణ కొనసాగించండి."
+    },
+    hi:{
+      "Thunderstorm alert":"आंधी-तूफान चेतावनी","Avoid spraying, irrigation work and exposed field activity during thunderstorms.":"आंधी-तूफान के दौरान छिड़काव, सिंचाई और खुले खेत में काम करने से बचें.",
+      "Rain alert":"बारिश चेतावनी","Rain is possible soon. Consider delaying pesticide or fertilizer spraying and review irrigation needs.":"जल्द बारिश की संभावना है। कीटनाशक या उर्वरक का छिड़काव टालें और सिंचाई की जरूरत जांचें.",
+      "Strong wind alert":"तेज हवा चेतावनी","Secure young plants and equipment. Avoid spraying in strong winds.":"छोटे पौधों और उपकरणों को सुरक्षित रखें। तेज हवा में छिड़काव न करें.",
+      "Heat stress alert":"गर्मी तनाव चेतावनी","Increase crop monitoring and plan irrigation during cooler hours.":"फसल की निगरानी बढ़ाएं और ठंडे समय में सिंचाई की योजना बनाएं.",
+      "High humidity alert":"अधिक नमी चेतावनी","High humidity can increase fungal disease pressure. Inspect crops and avoid unnecessary leaf wetness.":"अधिक नमी से फफूंद रोग का जोखिम बढ़ सकता है। फसल जांचें और अनावश्यक पत्तियों की नमी से बचें.",
+      "High UV alert":"उच्च UV चेतावनी","Schedule intensive field work outside peak UV hours where practical.":"जहां संभव हो, तेज UV वाले समय के बाहर खेत का भारी काम करें.",
+      "Favorable conditions":"अनुकूल परिस्थितियां","No major automatic weather risk detected right now. Continue routine crop monitoring.":"अभी कोई बड़ा स्वचालित मौसम जोखिम नहीं मिला। सामान्य फसल निगरानी जारी रखें."
+    },
+    ta:{
+      "Thunderstorm alert":"இடியுடன் கூடிய மழை எச்சரிக்கை","Avoid spraying, irrigation work and exposed field activity during thunderstorms.":"இடியுடன் கூடிய மழையின் போது தெளித்தல், பாசன வேலை மற்றும் திறந்தவெளி வயல் பணிகளை தவிர்க்கவும்.",
+      "Rain alert":"மழை எச்சரிக்கை","Rain is possible soon. Consider delaying pesticide or fertilizer spraying and review irrigation needs.":"விரைவில் மழை பெய்ய வாய்ப்பு உள்ளது. பூச்சிக்கொல்லி அல்லது உரம் தெளிப்பதை தாமதித்து பாசன தேவையை சரிபார்க்கவும்.",
+      "Strong wind alert":"பலத்த காற்று எச்சரிக்கை","Secure young plants and equipment. Avoid spraying in strong winds.":"இளம் செடிகள் மற்றும் கருவிகளை பாதுகாக்கவும். பலத்த காற்றில் தெளிக்க வேண்டாம்.",
+      "Heat stress alert":"வெப்ப அழுத்த எச்சரிக்கை","Increase crop monitoring and plan irrigation during cooler hours.":"பயிர் கண்காணிப்பை அதிகரித்து குளிரான நேரத்தில் பாசனத்தை திட்டமிடவும்.",
+      "High humidity alert":"அதிக ஈரப்பத எச்சரிக்கை","High humidity can increase fungal disease pressure. Inspect crops and avoid unnecessary leaf wetness.":"அதிக ஈரப்பதம் பூஞ்சை நோய் அபாயத்தை அதிகரிக்கலாம். பயிர்களை சரிபார்த்து தேவையற்ற இலை ஈரத்தை தவிர்க்கவும்.",
+      "High UV alert":"அதிக UV எச்சரிக்கை","Schedule intensive field work outside peak UV hours where practical.":"முடிந்தால் அதிக UV நேரங்களை தவிர்த்து முக்கிய வயல் பணிகளை செய்யவும்.",
+      "Favorable conditions":"சாதகமான நிலை","No major automatic weather risk detected right now. Continue routine crop monitoring.":"தற்போது பெரிய தானியங்கி வானிலை ஆபத்து இல்லை. வழக்கமான பயிர் கண்காணிப்பை தொடரவும்."
+    },
+    kn:{
+      "Thunderstorm alert":"ಗುಡುಗು ಸಹಿತ ಮಳೆ ಎಚ್ಚರಿಕೆ","Avoid spraying, irrigation work and exposed field activity during thunderstorms.":"ಗುಡುಗು ಸಹಿತ ಮಳೆಯ ಸಮಯದಲ್ಲಿ ಸಿಂಪಡಣೆ, ನೀರಾವರಿ ಮತ್ತು ತೆರೆದ ಹೊಲದ ಕೆಲಸಗಳನ್ನು ತಪ್ಪಿಸಿ.",
+      "Rain alert":"ಮಳೆ ಎಚ್ಚರಿಕೆ","Rain is possible soon. Consider delaying pesticide or fertilizer spraying and review irrigation needs.":"ಶೀಘ್ರದಲ್ಲೇ ಮಳೆಯ ಸಾಧ್ಯತೆ ಇದೆ. ಕೀಟನಾಶಕ ಅಥವಾ ಗೊಬ್ಬರ ಸಿಂಪಡಣೆಯನ್ನು ಮುಂದೂಡಿ ನೀರಾವರಿ ಅಗತ್ಯ ಪರಿಶೀಲಿಸಿ.",
+      "Strong wind alert":"ಬಲವಾದ ಗಾಳಿ ಎಚ್ಚರಿಕೆ","Secure young plants and equipment. Avoid spraying in strong winds.":"ಚಿಕ್ಕ ಸಸಿಗಳು ಮತ್ತು ಉಪಕರಣಗಳನ್ನು ಸುರಕ್ಷಿತವಾಗಿಡಿ. ಬಲವಾದ ಗಾಳಿಯಲ್ಲಿ ಸಿಂಪಡಿಸಬೇಡಿ.",
+      "Heat stress alert":"ಬಿಸಿ ಒತ್ತಡ ಎಚ್ಚರಿಕೆ","Increase crop monitoring and plan irrigation during cooler hours.":"ಬೆಳೆ ಮೇಲ್ವಿಚಾರಣೆಯನ್ನು ಹೆಚ್ಚಿಸಿ ತಂಪಾದ ಸಮಯದಲ್ಲಿ ನೀರಾವರಿ ಯೋಜಿಸಿ.",
+      "High humidity alert":"ಹೆಚ್ಚಿನ ತೇವಾಂಶ ಎಚ್ಚರಿಕೆ","High humidity can increase fungal disease pressure. Inspect crops and avoid unnecessary leaf wetness.":"ಹೆಚ್ಚಿನ ತೇವಾಂಶದಿಂದ ಶಿಲೀಂಧ್ರ ರೋಗದ ಅಪಾಯ ಹೆಚ್ಚಬಹುದು. ಬೆಳೆ ಪರಿಶೀಲಿಸಿ ಅನಗತ್ಯ ಎಲೆ ತೇವವನ್ನು ತಪ್ಪಿಸಿ.",
+      "High UV alert":"ಹೆಚ್ಚಿನ UV ಎಚ್ಚರಿಕೆ","Schedule intensive field work outside peak UV hours where practical.":"ಸಾಧ್ಯವಾದರೆ ಗರಿಷ್ಠ UV ಸಮಯದ ಹೊರಗೆ ಮುಖ್ಯ ಹೊಲ ಕೆಲಸ ಮಾಡಿ.",
+      "Favorable conditions":"ಅನುಕೂಲ ಪರಿಸ್ಥಿತಿಗಳು","No major automatic weather risk detected right now. Continue routine crop monitoring.":"ಈಗ ದೊಡ್ಡ ಸ್ವಯಂಚಾಲಿತ ಹವಾಮಾನ ಅಪಾಯ ಕಂಡುಬಂದಿಲ್ಲ. ಸಾಮಾನ್ಯ ಬೆಳೆ ಮೇಲ್ವಿಚಾರಣೆ ಮುಂದುವರಿಸಿ."
+    }
+  };
+  const lang=()=>localStorage.getItem('farmprofit-language')||'en';
+  const tr=(s)=>((translations[lang()]||translations.en)[s]||s);
+  function localizeAlerts(){
+    document.querySelectorAll('#weatherAlerts .farm-alert').forEach(card=>{
+      const title=card.querySelector('strong'), msg=card.querySelector('p');
+      if(title) title.textContent=tr(title.dataset.base||title.textContent);
+      if(msg) msg.textContent=tr(msg.dataset.base||msg.textContent);
+    });
+  }
+  const alertObserver=new MutationObserver(()=>{
+    document.querySelectorAll('#weatherAlerts strong,#weatherAlerts p').forEach(el=>{if(!el.dataset.base)el.dataset.base=el.textContent});
+    localizeAlerts();
+  });
+  const alertsEl=document.getElementById('weatherAlerts'); if(alertsEl) alertObserver.observe(alertsEl,{childList:true,subtree:true});
+
+  let coords=null;
+  function getCoords(){
+    return new Promise((resolve,reject)=>{
+      if(!navigator.geolocation)return reject(new Error('Location unavailable'));
+      navigator.geolocation.getCurrentPosition(p=>{coords={lat:p.coords.latitude,lon:p.coords.longitude};resolve(coords)},reject,{enableHighAccuracy:false,timeout:10000,maximumAge:300000});
+    });
+  }
+  async function check(){
+    const loading=document.getElementById('irrigationLoading'), result=document.getElementById('irrigationResult'), error=document.getElementById('irrigationError');
+    const crop=document.getElementById('irrigationCrop').value, area=document.getElementById('irrigationArea').value||1;
+    loading.hidden=false; result.hidden=true; error.hidden=true;
+    try{
+      if(!coords) await getCoords();
+      const url='/api/irrigation?lat='+encodeURIComponent(coords.lat)+'&lon='+encodeURIComponent(coords.lon)+'&crop='+encodeURIComponent(crop)+'&area='+encodeURIComponent(area)+'&lang='+encodeURIComponent(lang());
+      const res=await fetch(url,{cache:'no-store'}), data=await res.json();
+      if(!res.ok)throw new Error(data.error||'Request failed');
+      const action=document.getElementById('irrigationAction');
+      action.textContent=data.title; action.className='irrigation-action '+data.action;
+      document.getElementById('irrigationMessage').textContent=data.message;
+      document.getElementById('irrigationPerAcre').textContent=Number(data.estimated_litres_per_acre).toLocaleString()+' L';
+      document.getElementById('irrigationTotal').textContent=Number(data.estimated_total_litres).toLocaleString()+' L';
+      document.getElementById('irrigationCost').textContent='₹'+Number((data.profit_impact||{}).irrigation_cost||0).toLocaleString();
+      const impact=document.getElementById('irrigationImpact');
+      impact.textContent=(data.action==='skip'?'💰 Irrigation cost avoided based on forecast.':'💧 Estimated irrigation expense for this recommendation: ₹'+Number((data.profit_impact||{}).irrigation_cost||0).toLocaleString());
+      const wp=data.weather_profit_impact||{};
+      const risk=document.getElementById('weatherProfitRisk');
+      risk.textContent=(wp.risk_level||'low').toUpperCase()+' WEATHER RISK';
+      risk.className='weather-profit-risk '+(wp.risk_level||'low');
+      document.getElementById('weatherProfitFactors').innerHTML=(wp.factors||[]).map(x=>'<div>• '+esc(x)+'</div>').join('');
+      document.getElementById('irrigationRain').textContent=data.rain_24h_mm+' mm';
+      document.getElementById('irrigationProbability').textContent=data.rain_probability_24h+'%';
+      document.getElementById('irrigationNote').textContent=data.method;
+      loading.hidden=true; result.hidden=false;
+    }catch(e){
+      loading.hidden=true; error.hidden=false; error.textContent=lang()==='te'?'పంట నీటిపారుదల సూచనను లోడ్ చేయలేకపోయాం.':'Could not load the irrigation recommendation. Allow location access and try again.';
+    }
+  }
+  document.getElementById('irrigationCheck').addEventListener('click',check);
+  const langEl=document.getElementById('languageSelect');
+  if(langEl)langEl.addEventListener('change',()=>{setTimeout(()=>{localizeAlerts(); if(!document.getElementById('irrigationResult').hidden)check()},40)});
+  localizeAlerts();
+})();

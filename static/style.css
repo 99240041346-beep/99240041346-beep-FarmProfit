@@ -12,3 +12,35 @@
 .soil-main-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;align-items:stretch}.soil-primary{display:flex;align-items:center;gap:16px;padding:18px;background:#fff;border-radius:18px;border:1px solid rgba(72,111,78,.10)}.soil-icon{font-size:38px}.soil-label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#7a867e;margin-bottom:4px}.soil-primary strong{font-size:20px}.soil-select-wrap{display:flex;flex-direction:column;justify-content:center;gap:7px;padding:18px;background:#fff;border-radius:18px;border:1px solid rgba(72,111,78,.10)}.soil-select-wrap span{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#7a867e}.soil-select-wrap select{width:100%}
 .soil-detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}.soil-detail-grid>div{padding:15px;background:#fff;border-radius:16px;border:1px solid rgba(72,111,78,.08)}.soil-detail-grid span{display:block;font-size:12px;color:#7a867e;margin-bottom:5px}.soil-detail-grid b{font-size:15px}.soil-advice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.soil-advice{padding:17px;background:#fff;border-radius:16px;border:1px solid rgba(72,111,78,.08)}.soil-advice>span{font-weight:800}.soil-advice p{margin:7px 0 0;color:#657168;line-height:1.55}.soil-match{margin-top:12px;padding:14px 16px;border-radius:14px;background:#e4f3e5;color:#315d37}.soil-match .match-dot{margin-right:7px}.soil-match.bad{background:#fff0ee;color:#8c3f37}.soil-match.medium{background:#fff7df;color:#805f1b}
 @media(max-width:800px){.soil-head{flex-direction:column}.soil-score{align-self:flex-start}.soil-main-grid,.soil-advice-grid{grid-template-columns:1fr}.soil-detail-grid{grid-template-columns:1fr 1fr}}
+
+
+/* Live weather */
+.weather-panel{overflow:hidden}.weather-live-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#edf7ed;color:#2f7d32;font-size:8px;font-weight:900;letter-spacing:1px}.weather-live-pill i{width:7px;height:7px;border-radius:50%;background:#48a34d;box-shadow:0 0 0 4px rgba(72,163,77,.12)}.weather-loading,.weather-error{padding:18px;border-radius:12px;background:#f6f8f5;color:#68736b;font-size:11px}.weather-error{background:#fff1ef;color:#8b443b}.weather-current{display:grid;grid-template-columns:1fr 2fr;gap:16px}.weather-temp{padding:18px;border-radius:16px;background:linear-gradient(135deg,#edf6e9,#f8fbf6);display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center}.weather-temp span{font-size:36px}.weather-temp strong{font-size:34px;letter-spacing:-2px}.weather-temp small{grid-column:2;color:#6f7b72;font-size:10px}.weather-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.weather-stats div{padding:14px;background:#fafcf9;border:1px solid #e5ebe3;border-radius:12px}.weather-stats span{display:block;font-size:8px;color:#7b867e}.weather-stats b{display:block;margin-top:5px;font-size:13px}.weather-alerts{display:grid;gap:8px;margin-top:12px}.farm-alert{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;border-left:4px solid #6aa56a;background:#edf7ed}.farm-alert.warning{background:#fff7e6;border-color:#d49a38}.farm-alert.danger{background:#fff0ee;border-color:#c95a4e}.farm-alert.info{background:#eef5fb;border-color:#6092bf}.farm-alert .alert-icon{font-size:19px}.farm-alert strong{display:block;font-size:10px}.farm-alert p{margin:3px 0 0;font-size:9px;line-height:1.5;color:#667169}.weather-days{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-top:12px}.weather-day{padding:10px 6px;text-align:center;background:#fafcf9;border:1px solid #e6ebe4;border-radius:10px}.weather-day small{display:block;font-size:8px;color:#7b867e}.weather-day b{display:block;font-size:12px;margin:5px 0}.weather-day span{font-size:14px}.weather-day em{display:block;font-size:7px;color:#5f7563;font-style:normal;margin-top:4px}.weather-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;color:#8a948c;font-size:8px}.weather-refresh{padding:7px 11px!important;font-size:9px!important}
+@media(max-width:800px){.weather-current{grid-template-columns:1fr}.weather-stats{grid-template-columns:repeat(2,1fr)}.weather-days{grid-template-columns:repeat(4,1fr)}}
+
+
+/* Smart irrigation advisor */
+.irrigation-panel{margin-top:24px}
+.irrigation-badge{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;background:#edf7ee;color:#2d6a38;font-size:12px;font-weight:800;letter-spacing:.05em}
+.irrigation-controls{display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:end;margin-top:18px}
+.irrigation-controls label{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:700;color:#526057}
+.irrigation-controls input,.irrigation-controls select{width:100%;box-sizing:border-box}
+.irrigation-loading{padding:18px;margin-top:18px;border-radius:16px;background:#f5f8f5;color:#526057}
+.irrigation-result{margin-top:18px;padding:20px;border:1px solid #dce8dd;border-radius:18px;background:linear-gradient(135deg,#f8fcf8,#f2f8f3)}
+.irrigation-action{font-size:25px;font-weight:850;color:#254c2c}
+.irrigation-action.now{color:#a23b2f}.irrigation-action.tomorrow{color:#8a6517}.irrigation-action.skip{color:#2e7040}
+.irrigation-message{margin:8px 0 16px;color:#526057}
+.irrigation-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.irrigation-stats div{padding:13px;border-radius:14px;background:#fff;border:1px solid #e3ebe4}
+.irrigation-stats span{display:block;font-size:11px;color:#68756c;margin-bottom:5px}
+.irrigation-stats b{font-size:17px}
+.irrigation-note{display:block;margin-top:14px;color:#68756c;line-height:1.5}
+@media(max-width:760px){.irrigation-controls{grid-template-columns:1fr}.irrigation-stats{grid-template-columns:1fr 1fr}}
+
+.irrigation-impact{margin-top:14px;padding:12px 14px;border-radius:12px;background:#edf7ee;color:#315f38;font-weight:700}
+
+.weather-profit-card{margin-top:16px;padding:16px;border-radius:16px;border:1px solid #e0e9e1;background:#fff}
+.weather-profit-title{font-weight:800;margin-bottom:8px}
+.weather-profit-risk{display:inline-block;padding:7px 10px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.04em}
+.weather-profit-risk.low{background:#edf7ee;color:#2d6a38}.weather-profit-risk.medium{background:#fff5dc;color:#80621a}.weather-profit-risk.high{background:#fdecea;color:#9b3a31}
+.weather-profit-factors{margin-top:10px;display:grid;gap:5px;color:#59665d;font-size:13px;line-height:1.45}
