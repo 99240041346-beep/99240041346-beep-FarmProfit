@@ -38,3 +38,9 @@
 @media(max-width:760px){.irrigation-controls{grid-template-columns:1fr}.irrigation-stats{grid-template-columns:1fr 1fr}}
 
 .irrigation-impact{margin-top:14px;padding:12px 14px;border-radius:12px;background:#edf7ee;color:#315f38;font-weight:700}
+
+.weather-profit-card{margin-top:16px;padding:16px;border-radius:16px;border:1px solid #e0e9e1;background:#fff}
+.weather-profit-title{font-weight:800;margin-bottom:8px}
+.weather-profit-risk{display:inline-block;padding:7px 10px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.04em}
+.weather-profit-risk.low{background:#edf7ee;color:#2d6a38}.weather-profit-risk.medium{background:#fff5dc;color:#80621a}.weather-profit-risk.high{background:#fdecea;color:#9b3a31}
+.weather-profit-factors{margin-top:10px;display:grid;gap:5px;color:#59665d;font-size:13px;line-height:1.45}
