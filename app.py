@@ -514,6 +514,44 @@ def fetch_weather(latitude, longitude):
     return result
 
 
+def geocode_farm_location(query):
+    query = (query or "").strip()
+    if len(query) < 2:
+        raise ValueError("Enter a village, town, district or city.")
+    params = urlencode({
+        "name": query,
+        "count": 1,
+        "language": "en",
+        "format": "json",
+    })
+    req = Request("https://geocoding-api.open-meteo.com/v1/search?" + params,
+                  headers={"User-Agent": "FarmProfit/1.1"})
+    with urlopen(req, timeout=8) as response:
+        data = json.loads(response.read().decode("utf-8"))
+    results = data.get("results") or []
+    if not results:
+        raise ValueError("Farm location was not found. Try a nearby town or district.")
+    place = results[0]
+    return {
+        "latitude": float(place["latitude"]),
+        "longitude": float(place["longitude"]),
+        "name": place.get("name") or query,
+        "admin1": place.get("admin1") or "",
+        "country": place.get("country") or "",
+    }
+
+
+@app.get("/api/geocode")
+def api_geocode():
+    query = request.args.get("q", "")
+    try:
+        return jsonify(geocode_farm_location(query))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": "Location search is temporarily unavailable.", "detail": str(exc)}), 502
+
+
 @app.get("/api/weather")
 def api_weather():
     latitude = request.args.get("lat")
