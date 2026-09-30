@@ -358,6 +358,95 @@ def api_calculate():
 
 
 WEATHER_CACHE_SECONDS = 300
+
+IRRIGATION_PROFILES = {
+    "Rice": {"base_mm": 6.0, "label": "Rice"},
+    "Wheat": {"base_mm": 4.0, "label": "Wheat"},
+    "Maize": {"base_mm": 5.0, "label": "Maize"},
+    "Cotton": {"base_mm": 5.0, "label": "Cotton"},
+    "Sugarcane": {"base_mm": 7.0, "label": "Sugarcane"},
+    "Tomato": {"base_mm": 4.0, "label": "Tomato"},
+    "Potato": {"base_mm": 3.5, "label": "Potato"},
+    "Groundnut": {"base_mm": 4.5, "label": "Groundnut"},
+}
+
+IRRIGATION_TEXT = {
+    "en": {
+        "now": ("Irrigate now", "Rain is not expected to provide enough water in the next 24 hours. Consider irrigating during the cooler part of the day."),
+        "tomorrow": ("Irrigate tomorrow", "Crop water demand is moderate today. Recheck tomorrow, preferably after the early forecast update."),
+        "skip": ("Skip irrigation — rain expected", "Forecast rainfall is likely to cover much of the crop's immediate water need. Recheck soil moisture before irrigating."),
+    },
+    "te": {
+        "now": ("ఇప్పుడే నీరు పెట్టండి", "తదుపరి 24 గంటల్లో తగినంత వర్షం కనిపించడం లేదు. చల్లని సమయంలో నీరు పెట్టడాన్ని పరిగణించండి."),
+        "tomorrow": ("రేపు నీరు పెట్టండి", "ఈరోజు పంటకు నీటి అవసరం మధ్యస్థంగా ఉంది. రేపు మళ్లీ వాతావరణ సూచనను పరిశీలించండి."),
+        "skip": ("నీరు పెట్టవద్దు — వర్షం వచ్చే అవకాశం ఉంది", "వచ్చే వర్షం పంటకు అవసరమైన నీటిలో ఎక్కువ భాగాన్ని అందించే అవకాశం ఉంది. నీరు పెట్టే ముందు నేల తేమను పరిశీలించండి."),
+    },
+    "hi": {
+        "now": ("अभी सिंचाई करें", "अगले 24 घंटों में पर्याप्त बारिश की संभावना नहीं है। ठंडे समय में सिंचाई करने पर विचार करें।"),
+        "tomorrow": ("कल सिंचाई करें", "आज फसल की पानी की जरूरत मध्यम है। कल फिर पूर्वानुमान और मिट्टी की नमी जांचें।"),
+        "skip": ("सिंचाई छोड़ें — बारिश की संभावना", "आने वाली बारिश फसल की तत्काल पानी की जरूरत का बड़ा हिस्सा पूरा कर सकती है। सिंचाई से पहले मिट्टी की नमी जांचें।"),
+    },
+    "ta": {
+        "now": ("இப்போது பாசனம் செய்யவும்", "அடுத்த 24 மணி நேரத்தில் போதுமான மழை எதிர்பார்க்கப்படவில்லை. குளிரான நேரத்தில் பாசனம் செய்யலாம்."),
+        "tomorrow": ("நாளை பாசனம் செய்யவும்", "இன்று பயிரின் நீர் தேவை மிதமாக உள்ளது. நாளை மீண்டும் முன்னறிவிப்பை சரிபார்க்கவும்."),
+        "skip": ("பாசனத்தை தவிர்க்கவும் — மழை எதிர்பார்ப்பு", "வரவிருக்கும் மழை பயிரின் உடனடி நீர் தேவையின் பெரும்பகுதியை பூர்த்தி செய்யலாம். பாசனத்திற்கு முன் மண் ஈரத்தை சரிபார்க்கவும்."),
+    },
+    "kn": {
+        "now": ("ಈಗ ನೀರಾವರಿ ಮಾಡಿ", "ಮುಂದಿನ 24 ಗಂಟೆಗಳಲ್ಲಿ ಸಾಕಷ್ಟು ಮಳೆಯ ಸಾಧ್ಯತೆ ಕಡಿಮೆ. ತಂಪಾದ ಸಮಯದಲ್ಲಿ ನೀರಾವರಿ ಮಾಡುವುದನ್ನು ಪರಿಗಣಿಸಿ."),
+        "tomorrow": ("ನಾಳೆ ನೀರಾವರಿ ಮಾಡಿ", "ಇಂದು ಬೆಳೆಗೆ ನೀರಿನ ಅವಶ್ಯಕತೆ ಮಧ್ಯಮವಾಗಿದೆ. ನಾಳೆ ಮತ್ತೆ ಮುನ್ಸೂಚನೆಯನ್ನು ಪರಿಶೀಲಿಸಿ."),
+        "skip": ("ನೀರಾವರಿ ಬೇಡ — ಮಳೆಯ ಸಾಧ್ಯತೆ", "ಮುಂದಿನ ಮಳೆ ಬೆಳೆಯ ತಕ್ಷಣದ ನೀರಿನ ಅಗತ್ಯದ ಬಹುಪಾಲನ್ನು ಪೂರೈಸಬಹುದು. ನೀರಾವರಿಗೂ ಮೊದಲು ಮಣ್ಣಿನ ತೇವಾಂಶ ಪರಿಶೀಲಿಸಿ."),
+    },
+}
+
+def build_irrigation_advice(weather, crop, area, lang="en"):
+    profile = IRRIGATION_PROFILES.get(crop, IRRIGATION_PROFILES["Rice"])
+    lang = lang if lang in IRRIGATION_TEXT else "en"
+    daily = weather.get("daily", {})
+    hourly = weather.get("hourly", {})
+    rain_probs = (hourly.get("precipitation_probability", []) or [])[:24]
+    next24_prob = max([float(v or 0) for v in rain_probs] or [0])
+    daily_rain = (daily.get("precipitation_sum", []) or [])[:2]
+    rain_24h = float(daily_rain[0] or 0) if daily_rain else 0.0
+    rain_48h = sum(float(v or 0) for v in daily_rain[:2])
+    current = weather.get("current", {})
+    temp = float(current.get("temperature_2m", 25) or 25)
+    humidity = float(current.get("relative_humidity_2m", 60) or 60)
+
+    demand = profile["base_mm"]
+    demand *= max(0.75, min(1.35, 1 + (temp - 28) * 0.025))
+    demand *= max(0.75, min(1.15, 1 + (65 - humidity) * 0.004))
+    effective_rain = min(demand, rain_24h * 0.75)
+
+    if rain_24h >= 5 or (next24_prob >= 70 and rain_48h >= 5):
+        action = "skip"
+        net_mm = 0.0
+    elif effective_rain >= demand * 0.45:
+        action = "tomorrow"
+        net_mm = max(0.0, demand - effective_rain)
+    else:
+        action = "now"
+        net_mm = max(0.0, demand - effective_rain)
+
+    area = max(float(area or 1), 0.1)
+    litres_per_acre = round(net_mm * 4046.856, 0)
+    total_litres = round(litres_per_acre * area, 0)
+    title, message = IRRIGATION_TEXT[lang][action]
+    return {
+        "action": action,
+        "title": title,
+        "message": message,
+        "crop": crop,
+        "area_acres": round(area, 2),
+        "estimated_need_mm": round(net_mm, 1),
+        "estimated_litres_per_acre": int(litres_per_acre),
+        "estimated_total_litres": int(total_litres),
+        "rain_24h_mm": round(rain_24h, 1),
+        "rain_probability_24h": round(next24_prob),
+        "temperature_c": round(temp, 1),
+        "humidity_percent": round(humidity),
+        "method": "Rule-based estimate using crop baseline demand, temperature, humidity and forecast rainfall. Actual irrigation should be adjusted for soil moisture, crop stage and local agronomy.",
+    }
+
 _weather_cache = {}
 
 
@@ -435,6 +524,26 @@ def api_weather():
         return jsonify(fetch_weather(latitude, longitude))
     except Exception as exc:
         return jsonify({"error": "Weather service unavailable.", "detail": str(exc)}), 502
+
+
+
+
+@app.get("/api/irrigation")
+def api_irrigation():
+    latitude = request.args.get("lat")
+    longitude = request.args.get("lon")
+    crop = request.args.get("crop", "Rice")
+    lang = request.args.get("lang", "en")
+    try:
+        area = nfloat(request.args.get("area"), 1.0)
+        if crop not in IRRIGATION_PROFILES:
+            crop = "Rice"
+        weather = fetch_weather(latitude, longitude)
+        return jsonify(build_irrigation_advice(weather, crop, area, lang))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        return jsonify({"error": "Irrigation advisor unavailable.", "detail": str(exc)}), 502
 
 
 @app.get("/health")
