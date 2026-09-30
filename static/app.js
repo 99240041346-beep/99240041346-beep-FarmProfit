@@ -387,6 +387,9 @@
       document.getElementById('irrigationMessage').textContent=data.message;
       document.getElementById('irrigationPerAcre').textContent=Number(data.estimated_litres_per_acre).toLocaleString()+' L';
       document.getElementById('irrigationTotal').textContent=Number(data.estimated_total_litres).toLocaleString()+' L';
+      document.getElementById('irrigationCost').textContent='₹'+Number((data.profit_impact||{}).irrigation_cost||0).toLocaleString();
+      const impact=document.getElementById('irrigationImpact');
+      impact.textContent=(data.action==='skip'?'💰 Irrigation cost avoided based on forecast.':'💧 Estimated irrigation expense for this recommendation: ₹'+Number((data.profit_impact||{}).irrigation_cost||0).toLocaleString());
       document.getElementById('irrigationRain').textContent=data.rain_24h_mm+' mm';
       document.getElementById('irrigationProbability').textContent=data.rain_probability_24h+'%';
       document.getElementById('irrigationNote').textContent=data.method;
